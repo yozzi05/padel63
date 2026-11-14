@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="ru" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Padel63 — падел-клуб в Самаре</title>
+    <meta
+      name="description"
+      content="Падел-клуб Padel63 в Самаре: открытые корты на набережной Волги и закрытый корт на Шоссейной. Онлайн-бронирование, обучение с нуля, прокат ракеток, рейтинг лиги."
+    />
+    <meta name="theme-color" content="#0C0D0A" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <script>
+      // Тема применяется до отрисовки, чтобы не было вспышки
+      try {
+        var t = localStorage.getItem("padel63:theme");
+        if (t === '"light"') document.documentElement.setAttribute("data-theme", "light");
+      } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

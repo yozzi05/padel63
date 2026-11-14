@@ -1,0 +1,297 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* В Sofia Sans Extra Condensed нет знака рубля: берём его из Geologica,
+   иначе браузер подставит системный шрифт. */
+@font-face {
+  font-family: "Ruble";
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("../node_modules/@fontsource/geologica/files/geologica-latin-ext-700-normal.woff2") format("woff2");
+  unicode-range: U+20BD;
+}
+
+/* ---------- Токены ---------- */
+:root {
+  --bg: #0c0d0a;
+  --surface: #16180f;
+  --line: #2a2d20;
+  --text: #f2f3ec;
+  --text-muted: #9a9d8c;
+  --lime: #c9f51a;
+  --court: #2f5bea;
+  --busy: #ff6b4a;
+
+  /* Производные: лайм как цвет текста допустим только на тёмном фоне */
+  --accent-ink: #c9f51a;
+  --busy-ink: #ff6b4a;
+  --btn-bg: #c9f51a;
+  --btn-fg: #0c0d0a;
+  --hatch: rgba(242, 243, 236, 0.09);
+  --glass: rgba(242, 243, 236, 0.07);
+  --glass-line: rgba(242, 243, 236, 0.4);
+  color-scheme: dark;
+}
+
+[data-theme="light"] {
+  --bg: #f4f5ee;
+  --surface: #ffffff;
+  --line: #dfe1d4;
+  --text: #14150f;
+  --text-muted: #62655a;
+  --busy: #d9482a;
+
+  --accent-ink: #14150f;
+  --busy-ink: #b93a1f;
+  --btn-bg: #14150f;
+  --btn-fg: #c9f51a;
+  --hatch: rgba(20, 21, 15, 0.1);
+  --glass: rgba(20, 21, 15, 0.05);
+  --glass-line: rgba(20, 21, 15, 0.45);
+  color-scheme: light;
+}
+
+@layer base {
+  html {
+    scroll-padding-top: 84px;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-bg text-ink font-sans antialiased;
+    font-size: 16px;
+    line-height: 1.55;
+    overflow-x: hidden;
+    -webkit-tap-highlight-color: transparent;
+  }
+  @media (min-width: 768px) {
+    body {
+      font-size: 17px;
+    }
+  }
+  :focus-visible {
+    outline: 2px solid var(--text);
+    outline-offset: 2px;
+  }
+  button,
+  a {
+    touch-action: manipulation;
+  }
+  section[id] {
+    scroll-margin-top: 84px;
+  }
+}
+
+@layer components {
+  .wrap {
+    @apply mx-auto w-full max-w-[1200px] px-4 sm:px-6;
+  }
+  .section {
+    @apply py-14 md:py-24;
+  }
+  .h1,
+  .h2,
+  .display {
+    @apply font-display uppercase;
+    letter-spacing: 0.005em;
+    hyphens: none;
+    overflow-wrap: normal;
+    word-break: normal;
+  }
+  .h1 {
+    @apply text-[58px] font-extrabold leading-[0.92] md:text-[96px];
+  }
+  .h2 {
+    @apply text-[40px] font-extrabold leading-none md:text-[60px];
+  }
+  .caption {
+    @apply text-[14px] leading-snug text-muted;
+  }
+  .mono {
+    @apply font-mono font-normal;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.03em;
+  }
+
+  .btn {
+    @apply inline-flex h-[52px] select-none items-center justify-center gap-2 whitespace-nowrap rounded-[14px] px-6 text-[16px] font-semibold;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+  }
+  .btn:active {
+    transform: scale(0.98);
+  }
+  .btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+  .btn-primary {
+    background: var(--btn-bg);
+    color: var(--btn-fg);
+  }
+  .btn-secondary {
+    @apply border border-line text-ink;
+  }
+  .btn-secondary:hover {
+    border-color: var(--text-muted);
+  }
+  .btn-sm {
+    @apply h-11 rounded-xl px-4 text-[15px];
+  }
+
+  .card {
+    @apply rounded-[20px] border border-line bg-surface;
+  }
+
+  /* Цифра-акцент: лайм на тёмном, тёмная цифра на лаймовой плашке на светлом */
+  .accent-num {
+    color: var(--accent-ink);
+  }
+  [data-theme="light"] .accent-num {
+    @apply rounded-md bg-lime px-1.5;
+  }
+
+  .dot {
+    @apply inline-block h-2.5 w-2.5 shrink-0 rounded-full;
+  }
+  .dot-free {
+    @apply bg-lime;
+  }
+  [data-theme="light"] .dot-free {
+    box-shadow: 0 0 0 1px var(--text);
+  }
+  .dot-busy {
+    background: var(--busy);
+  }
+
+  .hatch {
+    background-image: repeating-linear-gradient(135deg, var(--hatch) 0 4px, transparent 4px 9px);
+  }
+
+  .field {
+    @apply h-[52px] w-full rounded-[14px] border border-line bg-bg px-4 text-[16px] text-ink;
+  }
+  .field::placeholder {
+    color: var(--text-muted);
+  }
+}
+
+/* ---------- Цифра 63 ---------- */
+.big63 {
+  @apply font-display font-extrabold;
+  letter-spacing: -0.01em;
+  line-height: 0.8;
+  color: transparent;
+  -webkit-text-stroke: 2px var(--lime);
+}
+[data-theme="light"] .big63 {
+  color: var(--lime);
+  -webkit-text-stroke: 2px var(--text);
+}
+
+/* ---------- Движение: только transform и opacity ---------- */
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.reveal.in {
+  opacity: 1;
+  transform: none;
+}
+
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee 32s linear infinite;
+}
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.ball-travel,
+.ball-hop {
+  transform-box: fill-box;
+}
+.ball-travel {
+  animation: ball-travel 1.7s linear infinite alternate;
+}
+.ball-hop {
+  animation: ball-hop 1.7s infinite;
+}
+@keyframes ball-travel {
+  to {
+    transform: translate(var(--dx), var(--dy));
+  }
+}
+@keyframes ball-hop {
+  0%,
+  100% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0.2, 0.6, 0.4, 1);
+  }
+  50% {
+    transform: translateY(-52px);
+    animation-timing-function: cubic-bezier(0.6, 0, 0.8, 0.4);
+  }
+}
+
+.swap-in {
+  animation: swap-in 0.2s ease both;
+}
+@keyframes swap-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+.sheet-in {
+  animation: sheet-in 0.22s ease both;
+}
+@keyframes sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+.spin {
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .marquee-track,
+  .ball-travel,
+  .ball-hop,
+  .swap-in,
+  .sheet-in {
+    animation: none;
+  }
+  .btn,
+  .venue-thumb {
+    transition: none !important;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* Скрытая полоса прокрутки у ленты дней */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
