@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { AuthForm } from "../components/AuthForm";
 import { Modal, reducedMotion, VenueSwitch } from "../components/ui";
-import { RENTAL, VENUES } from "../data/club";
+import { PRICES, RENTAL, VENUES } from "../data/club";
 import { COURTS, seasonOpen } from "../data/courts";
 import type { BusyInterval } from "../data/slots";
 import {
@@ -65,7 +65,7 @@ const STATE_HINT: Record<SlotState, string> = {
   free: "свободно",
   busy: "занято",
   own: "ваша бронь",
-  short: "окно меньше часа",
+  short: "не хватает времени",
   past: "время прошло",
 };
 
@@ -168,7 +168,7 @@ function DesktopGrid({ courts, list, nowMin, sel, dur, onPick }: GridProps) {
                       <SlotCell
                         key={t}
                         t={t}
-                        state={slotState(list, c, t, nowMin)}
+                        state={slotState(list, c, t, nowMin, dur)}
                         selected={inSelection(sel, dur, c, t)}
                         onPick={() => onPick(c, t)}
                       />
@@ -202,7 +202,7 @@ function MobileGrid({
       {courts.length > 1 && (
         <div role="tablist" aria-label="Корт" className="mb-4 grid gap-2" style={{ gridTemplateColumns: `repeat(${courts.length}, 1fr)` }}>
           {courts.map((c) => {
-            const free = times.filter((t) => slotState(list, c, t, nowMin) === "free").length;
+            const free = times.filter((t) => slotState(list, c, t, nowMin, dur) === "free").length;
             return (
               <button
                 key={c}
@@ -231,7 +231,7 @@ function MobileGrid({
             <li key={t}>
               <SlotCell
                 t={t}
-                state={slotState(list, court, t, nowMin)}
+                state={slotState(list, court, t, nowMin, dur)}
                 selected={inSelection(sel, dur, court, t)}
                 onPick={() => onPick(court, t)}
               />
@@ -243,7 +243,7 @@ function MobileGrid({
   );
 }
 
-function Legend() {
+function Legend({ dur }: { dur: number }) {
   const item = "flex items-center gap-2";
   const box = "inline-block h-4 w-6 rounded-[5px] border";
   return (
@@ -258,7 +258,7 @@ function Legend() {
         <span className={`${box} hatch border-transparent`} aria-hidden /> Занято
       </li>
       <li className={item}>
-        <span className={`${box} border-dashed border-line`} aria-hidden /> Окно меньше часа
+        <span className={`${box} border-dashed border-line`} aria-hidden /> Не хватает времени на {durLabel(dur)}
       </li>
     </ul>
   );
@@ -317,6 +317,7 @@ export default function BookingPage() {
   const [tabCourt, setTabCourt] = useState(init?.court && courts.includes(init.court) ? init.court : courts[0]);
   const [sel, setSel] = useState<Selection | null>(null);
   const [dur, setDur] = useState(90);
+  const [note, setNote] = useState("");
   const [rackets, setRackets] = useState(0);
   const [balls, setBalls] = useState(false);
   const [pct, setPct] = useState<50 | 100>(50);
@@ -334,6 +335,7 @@ export default function BookingPage() {
   useEffect(() => {
     if (prevKey.current === venueId + date) return;
     prevKey.current = venueId + date;
+    setNote("");
     setSel(null);
     setTabCourt((c) => (courts.includes(c) ? c : courts[0]));
   }, [venueId, date]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -360,17 +362,12 @@ export default function BookingPage() {
     if (sel && nowMin !== null && sel.start < nowMin) setSel(null);
   }, [sel, nowMin]);
 
-  const options = sel ? durationOptions(list, sel.court, sel.start) : [];
-
   const pick = (court: number, start: number) => {
     if (sel && sel.court === court && sel.start === start) {
       setSel(null);
       return;
     }
-    const opts = durationOptions(list, court, start);
-    const keep = opts.find((o) => o.dur === dur && o.ok);
-    const best = [...opts].reverse().find((o) => o.ok && o.dur <= dur) ?? opts.find((o) => o.ok);
-    if (!keep && best) setDur(best.dur);
+    setNote("");
     setSel({ court, start });
     setTabCourt(court);
     // На телефоне панель с итогом ниже списка слотов: подводим к ней
@@ -378,6 +375,16 @@ export default function BookingPage() {
       requestAnimationFrame(() =>
         panelRef.current?.scrollIntoView({ behavior: reducedMotion() ? "auto" : "smooth", block: "start" }),
       );
+    }
+  };
+
+  // Длительность выбирается до слота. Если выбранное время под неё не подходит, выбор снимается.
+  const changeDur = (next: number) => {
+    setDur(next);
+    setNote("");
+    if (sel && slotState(list, sel.court, sel.start, nowMin, next) !== "free") {
+      setNote(`На ${durLabel(next)} с ${fmtTime(sel.start)} корт ${sel.court} не свободен. Выберите другое время.`);
+      setSel(null);
     }
   };
 
@@ -436,7 +443,7 @@ export default function BookingPage() {
     <div className="wrap pb-16 pt-8 md:pt-12">
       <h1 className="h2">Бронирование корта</h1>
       <p className="mt-3 max-w-[640px] text-muted">
-        Выберите площадку, день и свободный слот. Вход по телефону понадобится только перед оплатой.
+        Выберите площадку, день и длительность игры. В сетке останется только время, когда корт свободен на весь срок.
       </p>
 
       <div className="mt-7 grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_380px]">
@@ -449,6 +456,26 @@ export default function BookingPage() {
           </div>
 
           <DateStrip today={now.date} value={date} onChange={setDate} />
+
+          <fieldset>
+            <legend className="mb-2 text-[17px] font-semibold">На сколько нужен корт?</legend>
+            <div className="grid grid-cols-3 gap-2 sm:max-w-[520px]">
+              {PRICES.map((p) => (
+                <button
+                  key={p.dur}
+                  type="button"
+                  aria-pressed={dur === p.dur}
+                  onClick={() => changeDur(p.dur)}
+                  className={`flex h-[64px] flex-col items-center justify-center rounded-[14px] border ${
+                    dur === p.dur ? "border-lime bg-lime text-night" : "border-line bg-surface hover:border-muted"
+                  }`}
+                >
+                  <span className="text-[16px] font-semibold">{p.label}</span>
+                  <span className={`mono text-[13px] ${dur === p.dur ? "" : "text-muted"}`}>{rub(p.price)}</span>
+                </button>
+              ))}
+            </div>
+          </fieldset>
 
           {closedSeason ? (
             <div className="card flex flex-col items-start gap-4 p-6">
@@ -463,8 +490,13 @@ export default function BookingPage() {
             <div key={venueId + date} className="swap-in grid gap-4">
               <h2 className="text-[17px] font-semibold">
                 {dateLabel(date, { weekday: "long", day: "numeric", month: "long" })}
-                <span className="font-normal text-muted"> · шаг 30 минут</span>
+                <span className="font-normal text-muted"> · свободно на {durLabel(dur)}</span>
               </h2>
+              {note && (
+                <p role="status" className="rounded-[12px] border border-line px-4 py-3 text-[15px]">
+                  {note}
+                </p>
+              )}
               <DesktopGrid courts={courts} list={list} nowMin={nowMin} sel={sel} dur={dur} onPick={pick} />
               <MobileGrid
                 courts={courts}
@@ -476,7 +508,7 @@ export default function BookingPage() {
                 court={tabCourt}
                 setCourt={setTabCourt}
               />
-              <Legend />
+              <Legend dur={dur} />
             </div>
           )}
         </div>
@@ -486,9 +518,11 @@ export default function BookingPage() {
           {!sel ? (
             <>
               <h2 className="display text-[25px] font-semibold">Ваша бронь</h2>
-              <p className="mt-3 text-muted">Нажмите на свободный слот в сетке. Длительность и допы выберете здесь.</p>
+              <p className="mt-3 text-muted">
+                Нажмите на время начала в сетке: корт будет ваш на {durLabel(dur)}. Прокат и предоплату выберете здесь.
+              </p>
               <p className="caption mt-4">
-                1 час {rub(courtPrice(60))} · 1,5 часа {rub(courtPrice(90))} · 2 часа {rub(courtPrice(120))}
+                Корт на {durLabel(dur)}: {rub(courtPrice(dur))}, ≈ {rub(courtPrice(dur) / 4)} на игрока
               </p>
             </>
           ) : (
@@ -503,40 +537,10 @@ export default function BookingPage() {
                   </span>
                 </p>
                 <p className="mt-1 text-[15px] text-muted">
-                  {dateLabel(date, { weekday: "long", day: "numeric", month: "long" })}
+                  {dateLabel(date, { weekday: "long", day: "numeric", month: "long" })} · {durLabel(dur)}
                 </p>
               </div>
 
-              <fieldset>
-                <legend className="caption mb-2">Длительность</legend>
-                <div className="grid grid-cols-3 gap-2">
-                  {options.map((o) => (
-                    <button
-                      key={o.dur}
-                      type="button"
-                      disabled={!o.ok}
-                      aria-pressed={dur === o.dur}
-                      onClick={() => setDur(o.dur)}
-                      className={`h-12 rounded-[12px] border text-[15px] font-semibold ${
-                        dur === o.dur && o.ok
-                          ? "border-lime bg-lime text-night"
-                          : o.ok
-                            ? "border-line hover:border-muted"
-                            : "hatch cursor-not-allowed border-transparent text-muted"
-                      }`}
-                    >
-                      {o.label}
-                    </button>
-                  ))}
-                </div>
-                {options
-                  .filter((o) => !o.ok)
-                  .map((o) => (
-                    <p key={o.dur} className="caption mt-2">
-                      {o.label} недоступно: {o.reason}.
-                    </p>
-                  ))}
-              </fieldset>
 
               <fieldset className="grid gap-3">
                 <legend className="caption mb-2">Прокат</legend>

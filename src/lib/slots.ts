@@ -80,13 +80,22 @@ export function courtStatus(list: BusyInterval[], court: number, now: number): C
 
 export type SlotState = "free" | "busy" | "own" | "short" | "past";
 
-/** Состояние получасового слота. nowMin передаётся только для сегодняшней даты. */
-export function slotState(list: BusyInterval[], court: number, t: number, nowMin: number | null): SlotState {
+/**
+ * Состояние получасового слота для выбранной длительности игры.
+ * nowMin передаётся только для сегодняшней даты.
+ */
+export function slotState(
+  list: BusyInterval[],
+  court: number,
+  t: number,
+  nowMin: number | null,
+  dur: number = MIN_DUR,
+): SlotState {
   if (nowMin !== null && t < nowMin) return "past";
   const hit = findOverlap(list, court, t, STEP);
   if (hit) return hit.own ? "own" : "busy";
-  // Свободное окно короче часа забронировать нельзя
-  if (t + MIN_DUR > CLOSE || findOverlap(list, court, t, MIN_DUR)) return "short";
+  // С этого времени выбранная длительность не помещается: дальше занято или клуб закрывается
+  if (t + dur > CLOSE || findOverlap(list, court, t, dur)) return "short";
   return "free";
 }
 

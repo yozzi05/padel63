@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru" data-theme="dark">
+<html lang="ru" data-theme="light">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -8,13 +8,13 @@
       name="description"
       content="Падел-клуб Padel63 в Самаре: открытые корты на набережной Волги и закрытый корт на Шоссейной. Онлайн-бронирование, обучение с нуля, прокат ракеток, рейтинг лиги."
     />
-    <meta name="theme-color" content="#0C0D0A" />
+    <meta name="theme-color" content="#F4F5EE" />
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
     <script>
       // Тема применяется до отрисовки, чтобы не было вспышки
       try {
         var t = localStorage.getItem("padel63:theme");
-        if (t === '"light"') document.documentElement.setAttribute("data-theme", "light");
+        if (t === '"dark"') document.documentElement.setAttribute("data-theme", "dark");
       } catch (e) {}
     </script>
   </head>

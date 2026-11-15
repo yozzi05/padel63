@@ -32,7 +32,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const v = load<string>("venue", "embankment");
     return v === "highway" ? "highway" : "embankment";
   });
-  const [theme, setTheme] = useState<Theme>(() => (load<string>("theme", "dark") === "light" ? "light" : "dark"));
+  const [theme, setTheme] = useState<Theme>(() => (load<string>("theme", "light") === "dark" ? "dark" : "light"));
   const [now, setNow] = useState<Now>(samaraNow);
   const [user, setUser] = useState<User | null>(() => load<User | null>("user", null));
   const [bookings, setBookings] = useState<Booking[]>(() => load<Booking[]>("bookings", []));
