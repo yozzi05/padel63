@@ -84,7 +84,7 @@
 
 @layer components {
   .wrap {
-    @apply mx-auto w-full max-w-[1200px] px-4 sm:px-6;
+    @apply mx-auto w-full max-w-[1536px] px-4 sm:px-6 lg:px-10 2xl:px-12;
   }
   .section {
     @apply py-14 md:py-24;
@@ -100,6 +100,7 @@
   }
   .h1 {
     @apply text-[58px] font-extrabold leading-[0.92] md:text-[96px];
+    text-wrap: balance;
   }
   .h2 {
     @apply text-[40px] font-extrabold leading-none md:text-[60px];
@@ -172,6 +173,40 @@
   }
   .field::placeholder {
     color: var(--text-muted);
+  }
+}
+
+/* ---------- Широкие экраны ----------
+   До 1536 px контент тянется на всю ширину окна. На экранах шире страница
+   масштабируется целиком, чтобы макет занимал весь экран и не оставлял полей. */
+@media (min-width: 1680px) {
+  html {
+    zoom: 1.1;
+  }
+}
+@media (min-width: 1900px) {
+  html {
+    zoom: 1.25;
+  }
+}
+@media (min-width: 2240px) {
+  html {
+    zoom: 1.45;
+  }
+}
+@media (min-width: 2560px) {
+  html {
+    zoom: 1.66;
+  }
+}
+@media (min-width: 3200px) {
+  html {
+    zoom: 2.08;
+  }
+}
+@media (min-width: 3840px) {
+  html {
+    zoom: 2.5;
   }
 }
 
